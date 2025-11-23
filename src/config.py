@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 
-# Load the .env file
+# Load values from the .env file in the project root
 load_dotenv()
 
 APP_ENV = os.getenv("APP_ENV", "dev")
