@@ -1,6 +1,11 @@
 from fastapi import FastAPI
-from app.routes import health
+from app.routes.health import router as health_router
+from app.routes.chat import router as chat_router
 
 app = FastAPI(title="AI Backend")
 
-app.include_router(health.router, prefix="/api")
+# Health check route
+app.include_router(health_router, prefix="/api")
+
+# Chat route (OpenAI-powered)
+app.include_router(chat_router, prefix="/api")
