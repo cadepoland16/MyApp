@@ -1,28 +1,41 @@
 from datetime import datetime
 import uuid
 
-from app.config import APP_ENV
+from app.config import APP_ENV, LLM_PROVIDER, OLLAMA_MODEL
 from app.models.chat import ChatRequest, ChatResponse
 from app.services.llm import simple_chat
 
 
 def handle_chat(request: ChatRequest) -> ChatResponse:
     """
-    Core chat orchestration logic:
-    - Takes a ChatRequest
-    - Calls the LLM layer (currently mock or OpenAI)
-    - Wraps the result in a structured ChatResponse with metadata
+    Core chat orchestration logic.
+
+    - Takes a ChatRequest from the route layer
+    - Delegates to the LLM provider (mock / ollama / openai) via simple_chat()
+    - Wraps the raw reply in a structured ChatResponse with metadata
     """
-    # Ask our LLM provider (mock or real, depending on APP_ENV)
+
+    # 1️⃣ Get the raw reply text from our LLM layer
     reply_text = simple_chat(request.message)
 
-    # Decide which "model" label to report
-    model_name = "mock-model" if APP_ENV == "mock" else "gpt-4o-mini"
+    # 2️⃣ Decide which "model" label to report based on env + provider
+    provider = (LLM_PROVIDER or "mock").lower()
 
-    # Create metadata for this response
+    if APP_ENV == "mock" or provider == "mock":
+        model_name = "mock-model"
+    elif provider == "ollama":
+        # Example: "ollama:llama3.2:latest"
+        model_name = f"ollama:{OLLAMA_MODEL}"
+    elif provider == "openai":
+        model_name = "gpt-4o-mini"
+    else:
+        model_name = f"unknown-provider:{provider}"
+
+    # 3️⃣ Create metadata
     timestamp = datetime.utcnow()
     request_id = str(uuid.uuid4())
 
+    # 4️⃣ Return a structured response
     return ChatResponse(
         reply=reply_text,
         model=model_name,
