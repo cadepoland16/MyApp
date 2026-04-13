@@ -5,6 +5,7 @@ from pydantic import BaseModel
 class ChatRequest(BaseModel):
     message: str
     conversation_id: str | None = None
+    model: str | None = None
 
 
 class ChatResponse(BaseModel):
@@ -29,3 +30,17 @@ class MessageItem(BaseModel):
     env: str | None = None
     request_id: str | None = None
     created_at: datetime
+
+
+class ModelOption(BaseModel):
+    id: str
+    label: str
+    description: str
+    recommended: bool = False
+    installed: bool | None = None
+
+
+class ModelCatalogResponse(BaseModel):
+    provider: str
+    default_model: str
+    models: list[ModelOption]

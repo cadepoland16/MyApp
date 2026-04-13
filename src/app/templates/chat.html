@@ -87,6 +87,7 @@
       display:flex;
       flex-direction:column;
       gap: 14px;
+      min-height: 0;
     }
 
     .left h3{
@@ -233,6 +234,12 @@
       flex-wrap:wrap;
     }
 
+    .conversationList{
+      flex: 1;
+      min-height: 0;
+      overflow: auto;
+    }
+
     .chatArea{
       flex: 1;
       padding: 16px 18px 12px 18px;
@@ -273,13 +280,16 @@
     }
 
     .composer{
-      display:flex;
+      display:grid;
+      grid-template-columns: 220px 1fr auto;
       align-items:center;
       gap: 10px;
       padding-top: 6px;
     }
+    .composer .modelSelect{
+      min-width: 0;
+    }
     .composer .input{
-      flex: 1;
       width: 100%;
       height: 50px;
       border-radius: 16px;
@@ -297,13 +307,14 @@
       .left{ order:2; }
       .right{ order:1; }
       .auth{ min-width: 0; }
+      .composer{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
 <body
-  data-supabase-url="{{ SUPABASE_URL | default('', true) }}"
-  data-supabase-anon-key="{{ SUPABASE_ANON_KEY | default('', true) }}"
+  data-supabase-url="{{ supabase_url | default('', true) }}"
+  data-supabase-anon-key="{{ supabase_anon_key | default('', true) }}"
 >
   <div class="shell">
     <div class="app">
@@ -311,6 +322,7 @@
         <h3>Conversations</h3>
         <button id="newBtn" class="btn primary" type="button">New</button>
         <p>Click a conversation to load its messages.</p>
+        <div id="conversationList" class="conversationList"></div>
 
         <div class="chip info" style="align-self:flex-start;">
           <span class="dot"></span>
@@ -352,6 +364,21 @@
           </div>
 
           <div class="composer">
+            <select id="modelSelect" class="input modelSelect" aria-label="Choose model">
+              {% if model_catalog and model_catalog.models %}
+                {% for model in model_catalog.models %}
+                  <option
+                    value="{{ model.id }}"
+                    {% if model.id == model_catalog.default_model %}selected{% endif %}
+                    {% if model.installed is sameas false %}disabled{% endif %}
+                  >
+                    {{ model.label }}{% if model.installed is sameas false %} (not installed){% endif %}
+                  </option>
+                {% endfor %}
+              {% else %}
+                <option value="">Loading models...</option>
+              {% endif %}
+            </select>
             <input id="message" class="input" type="text" placeholder="Type a message…" />
             <button id="sendBtn" class="btn primary" type="button">Send</button>
           </div>
@@ -365,6 +392,6 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script defer src="/static/chat.js"></script>
+  <script defer src="/static/chat.js?v={{ asset_version }}"></script>
 </body>
 </html>

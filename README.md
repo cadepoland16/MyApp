@@ -1,79 +1,168 @@
-CadeGPT
+# CadeGPT
 
-CadeGPT is a full-stack AI chat application built with FastAPI, a modern browser-based chat interface, and a pluggable large-language-model backend. It was designed to demonstrate how real AI products are built: with clean backend architecture, structured APIs, and a frontend that never talks directly to an AI model. The entire system runs locally using Ollama for free real-time inference, while remaining fully compatible with hosted providers such as OpenAI. Unlike simple demos, CadeGPT includes a real cloud database, meaning every conversation and message is permanently stored.
+CadeGPT is a local-first AI chat application built with FastAPI, Jinja, vanilla JavaScript, Ollama, and Supabase. It provides a browser chat UI, persists conversations and messages in Supabase, and routes each chat request through a backend service layer instead of calling the model directly from the frontend.
 
-The application works by exposing a single backend endpoint at POST /api/chat. The web UI sends user messages to this endpoint, and the FastAPI backend creates or loads a conversation, routes the request to the correct language-model provider based on environment configuration, receives the AI response, stores both the user message and assistant reply in the database, and returns a structured response to the client. This allows the same frontend and API to work with mock models for testing, local models through Ollama for free inference, or paid hosted models without changing any UI or API code. This separation of concerns mirrors how production AI platforms are designed.
+The current project supports model switching inside the chat UI. A user can choose between multiple local Ollama models per message without changing the frontend code or restarting the server.
 
-CadeGPT is built around a clean service-oriented architecture. The routing layer handles HTTP requests, the service layer coordinates chat logic, the database layer persists conversations and messages, and a dedicated provider layer communicates with the selected language model. Each AI response is wrapped in a structured object that includes not only the generated text but also metadata such as which model was used, which environment is running, the timestamp of the request, a unique request identifier, and the conversation ID. This makes logging, analytics, monitoring, and replay of conversations straightforward.
+## Current Features
 
-The frontend is a lightweight but fully functional chat interface that runs directly in the browser. It communicates exclusively with the FastAPI backend, rendering both user messages and assistant responses in real time. Because the UI depends only on the API, it remains stable regardless of which AI provider or database is used behind the scenes. This makes the system easy to extend, deploy, or upgrade without rewriting the frontend.
+- FastAPI backend with a browser chat interface at `GET /chat`
+- Chat API at `POST /api/chat`
+- Conversation list and message history backed by Supabase
+- Local Ollama inference with runtime model selection
+- Structured chat responses with `model`, `env`, `timestamp`, `request_id`, and `conversation_id`
+- Curated model catalog endpoint at `GET /api/models`
 
-CadeGPT is intentionally designed around Supabase for persistent memory. Supabase provides a PostgreSQL database that stores conversations and messages, allowing CadeGPT to support real chat history, conversation continuity, and future user-level data. Every chat turn is written to the database, giving CadeGPT true memory instead of being a stateless chatbot. This transforms the project from a local AI demo into the foundation of a scalable SaaS-style AI platform.
+## Default Local Models
 
-The technology stack includes Python 3.13, FastAPI, Pydantic, Uvicorn, Supabase, Ollama, HTML, CSS, and vanilla JavaScript. The system is configured using environment variables so secrets are never committed to GitHub and AI providers or databases can be swapped without touching application code. The entire project is designed to be clean, modular, and easy to understand for both developers and recruiters reviewing the repository.
+The app currently exposes these local chat models in the UI:
 
-Future Improvements:
+- `llama3.2:latest`
+- `phi4-mini`
+- `qwen2.5:7b`
 
-CadeGPT has been intentionally designed so that powerful features can be added without rewriting the system.
+The model picker is backed by a curated allowlist in the backend. You can override that list with `OLLAMA_AVAILABLE_MODELS` if you want a different set of models in the UI.
 
-Planned future enhancements include:
+## Architecture
 
-	•	User authentication and accounts using Supabase Auth, allowing each user to have private conversations and saved chat history
+The project is intentionally small and straightforward:
 
-	•	Multi-conversation management, including loading, renaming, and deleting past chats
+- `src/app/main.py`: FastAPI app setup, router registration, static files
+- `src/app/routes/`: HTTP routes for chat, conversations, health, and UI
+- `src/app/services/chat_service.py`: chat orchestration and persistence flow
+- `src/app/services/llm.py`: provider routing, model catalog, Ollama/OpenAI calls
+- `src/app/services/db.py`: Supabase persistence for conversations and messages
+- `src/app/templates/chat.html`: chat page template
+- `src/app/static/chat.js`: frontend chat logic and model picker behavior
 
-	•	Conversation summaries and long-term memory so the AI can recall important facts across sessions
+The request flow is:
 
-	•	Personalization, including system prompts, preferences, and user profiles
+1. The browser sends a message to `POST /api/chat`
+2. The backend validates the selected model
+3. The backend creates or reuses a conversation
+4. The user message is stored in Supabase
+5. The selected model is called through Ollama
+6. The assistant reply is stored in Supabase
+7. A structured response is returned to the UI
 
-	•	Usage tracking and billing, enabling SaaS-style monetization
+## Requirements
 
-	•	Streaming AI responses for a more interactive chat experience
+- Python `3.13`
+- Ollama installed and running locally
+- A Supabase project with `conversations` and `messages` tables
+- A `.env` file in the project root
 
-	•	Model switching and routing across multiple providers
+## Environment Variables
 
-	•	Better documentation, including comments, API reference pages, architecture diagrams, developer onboarding guides, and contribution guidelines
+Use `.env.example` as the starting point.
 
-	•	Unit and integration testing, ensuring stability as the system grows
+Required for the current local Ollama + Supabase setup:
 
-The current architecture already supports all of these upgrades — they can be added without breaking the existing UI, API, or database schema.
+- `APP_ENV`
+- `LLM_PROVIDER`
+- `OLLAMA_BASE_URL`
+- `OLLAMA_MODEL`
+- `SUPABASE_URL`
+- `SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
 
-Requirements & Running Locally
+Optional:
 
-CadeGPT is designed to be easy to run locally while following production-grade architecture patterns. The backend runs on FastAPI and Uvicorn, the AI model is provided by Ollama, and Supabase is used for persistent storage.
+- `OLLAMA_AVAILABLE_MODELS`
+- `OPENAI_API_KEY`
 
-To run CadeGPT locally, the following are required:
+Notes:
 
-	•	Python 3.13
+- `LLM_PROVIDER=ollama` is the local model path used in this project
+- `OLLAMA_MODEL` sets the default selected model
+- `OLLAMA_AVAILABLE_MODELS` accepts a comma-separated list such as `llama3.2:latest,phi4-mini,qwen2.5:7b`
+- `SUPABASE_SERVICE_ROLE_KEY` is required by the current database service implementation
 
-	•	Ollama installed and running with a supported model (e.g., llama3.2)
+## Run Locally
 
-	•	A Supabase project with a PostgreSQL database
+1. Create and activate a virtual environment
+2. Install dependencies from `requirements.txt`
+3. Copy `.env.example` to `.env` and fill in your values
+4. Make sure Ollama is running locally
+5. Start the FastAPI server
 
-	•	Environment variables configured in a .env file
-
-The required environment variables are:
-
-	•	SUPABASE_URL
-
-	•	SUPABASE_ANON_KEY
-
-	•	MODEL_PROVIDER (e.g., ollama)
-
-	•	OLLAMA_MODEL (e.g., llama3.2)
-
-Once dependencies are installed from requirements.txt and the .env file is configured, the application can be started with:
-
+```bash
 uvicorn app.main:app --reload --port 8000 --app-dir src
+```
 
-After the server starts, the chat interface is available at:
+Then open:
 
+```text
 http://127.0.0.1:8000/chat
+```
 
-From there, users can send messages, receive AI responses, and browse conversation history stored in Supabase.
+## API Endpoints
 
-Project Purpose:
+- `GET /chat`: browser UI
+- `GET /api/health`: health check
+- `GET /api/models`: model catalog for the chat picker
+- `POST /api/chat`: send a message and receive a model response
+- `GET /api/conversations`: list saved conversations
+- `POST /api/conversations`: create a new conversation
+- `GET /api/conversations/{conversation_id}/messages`: load messages for a conversation
 
-CadeGPT exists as both a learning platform and a portfolio-ready AI application. It demonstrates full-stack engineering, API design, AI system integration, cloud database persistence, and modern software architecture patterns. It is not a simple chatbot, but a well-structured AI platform that can evolve into a real product over time.
+Example `POST /api/chat` request:
 
-Built by Cade Poland. 
+```json
+{
+  "message": "Summarize the differences between FastAPI and Flask.",
+  "conversation_id": null,
+  "model": "qwen2.5:7b"
+}
+```
+
+Example response shape:
+
+```json
+{
+  "reply": "FastAPI is async-first and strongly typed...",
+  "model": "qwen2.5:7b",
+  "env": "dev",
+  "timestamp": "2026-04-12T23:00:00.000000",
+  "request_id": "uuid-here",
+  "conversation_id": "uuid-here"
+}
+```
+
+## Notes On Ollama Storage
+
+Ollama stores models under:
+
+```text
+~/.ollama/models
+```
+
+Manifest files live under:
+
+```text
+~/.ollama/models/manifests
+```
+
+The actual large model files live under:
+
+```text
+~/.ollama/models/blobs
+```
+
+## Known Limitations
+
+- The app currently uses synchronous database and HTTP calls inside FastAPI request handlers
+- There is no automated test suite yet
+- The current database service requires Supabase credentials at import time
+- The frontend is intentionally lightweight and does not yet support streaming responses
+
+## Future Improvements
+
+- Per-conversation model preferences
+- Streaming responses
+- Better error handling around provider/database failures
+- User authentication
+- Conversation rename/delete support
+- Test coverage for routes and service logic
+
+Built by Cade Poland.

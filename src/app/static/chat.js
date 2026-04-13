@@ -100,6 +100,13 @@
         () => qsa("input").find((i) => (i.type || "").toLowerCase() === "email")
       ),
 
+    modelSelect: () =>
+      first(
+        () => byId("modelSelect"),
+        () => qs('[data-role="model-select"]'),
+        () => qs("select")
+      ),
+
     convList: () =>
       first(
         () => byId("conversationList"),
@@ -132,8 +139,10 @@
   function disableSend(disabled) {
     const btn = el.send();
     const input = el.input();
+    const modelSelect = el.modelSelect();
     if (btn) btn.disabled = disabled;
     if (input) input.disabled = disabled;
+    if (modelSelect) modelSelect.disabled = disabled;
   }
 
   function hideAuthUIHard() {
@@ -221,6 +230,10 @@
     window.__conversationId = id;
   }
 
+  function getSelectedModel() {
+    return el.modelSelect()?.value || null;
+  }
+
   async function api(path, opts = {}) {
     const res = await fetch(path, opts);
     const ct = res.headers.get("content-type") || "";
@@ -285,6 +298,70 @@
     } catch (e) {
       console.warn("createConversation fallback:", e.message);
       return null;
+    }
+  }
+
+  async function fetchModels() {
+    return api("/api/models");
+  }
+
+  function populateModelSelect(catalog) {
+    const select = el.modelSelect();
+    if (!select) return;
+
+    const models = Array.isArray(catalog?.models) ? catalog.models : [];
+    const defaultModel = catalog?.default_model || "";
+
+    select.innerHTML = "";
+
+    if (!models.length) {
+      const option = document.createElement("option");
+      option.value = defaultModel;
+      option.textContent = defaultModel || "No models available";
+      select.appendChild(option);
+      select.disabled = true;
+      return;
+    }
+
+    let selectedValue = null;
+    for (const model of models) {
+      const option = document.createElement("option");
+      option.value = model.id;
+      option.textContent = model.installed === false ? `${model.label} (not installed)` : model.label;
+      option.title = model.description || "";
+      option.disabled = model.installed === false;
+      if (!selectedValue && option.disabled === false) {
+        selectedValue = model.id;
+      }
+      if (model.id === defaultModel && option.disabled === false) {
+        selectedValue = model.id;
+      }
+      select.appendChild(option);
+    }
+
+    select.disabled = false;
+    select.value = selectedValue || defaultModel || select.options[0]?.value || "";
+  }
+
+  async function loadModels() {
+    try {
+      const catalog = await fetchModels();
+      populateModelSelect(catalog);
+    } catch (e) {
+      console.error("loadModels failed:", e);
+      const select = el.modelSelect();
+      if (select) {
+        const hasUsableOptions = Array.from(select.options).some((option) => option.value);
+        if (hasUsableOptions) {
+          return;
+        }
+        select.innerHTML = "";
+        const option = document.createElement("option");
+        option.value = "";
+        option.textContent = "Model list unavailable";
+        select.appendChild(option);
+        select.disabled = true;
+      }
     }
   }
 
@@ -441,6 +518,7 @@
       const payload = {
         message: text,
         conversation_id: getConversationId(),
+        model: getSelectedModel(),
       };
 
       const data = await api("/api/chat", {
@@ -502,6 +580,7 @@
     disableSend(false);
     setStatus("Ready");
 
+    await loadModels();
     await loadConversations({ autoOpenLatest: true });
     scrollToBottom();
   })();

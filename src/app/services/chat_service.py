@@ -3,11 +3,13 @@ import uuid
 
 from app.config import APP_ENV
 from app.models.chat import ChatRequest, ChatResponse
-from app.services.llm import simple_chat
+from app.services.llm import resolve_chat_model, simple_chat
 from app.services.db import create_conversation, add_message
 
 
 def handle_chat(request: ChatRequest) -> ChatResponse:
+    selected_model = getattr(request, "model", None)
+    selected_model = resolve_chat_model(selected_model)
     conversation_id = getattr(request, "conversation_id", None) or create_conversation()
 
     request_id = str(uuid.uuid4())
@@ -17,12 +19,12 @@ def handle_chat(request: ChatRequest) -> ChatResponse:
         conversation_id=conversation_id,
         role="user",
         content=request.message,
-        model=None,
+        model=selected_model,
         env=APP_ENV,
         request_id=request_id,
     )
 
-    reply_text, model_used = simple_chat(request.message)
+    reply_text, model_used = simple_chat(request.message, model=selected_model)
 
     add_message(
         conversation_id=conversation_id,

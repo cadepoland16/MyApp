@@ -4,6 +4,7 @@ import traceback
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from app.services.llm import get_model_catalog
 
 router = APIRouter()
 
@@ -19,6 +20,7 @@ async def chat_page(request: Request):
 
         supabase_url = getattr(config, "SUPABASE_URL", "") or ""
         supabase_anon_key = getattr(config, "SUPABASE_ANON_KEY", "") or ""
+        model_catalog = get_model_catalog()
 
         return templates.TemplateResponse(
             "chat.html",
@@ -26,6 +28,8 @@ async def chat_page(request: Request):
                 "request": request,
                 "supabase_url": supabase_url,
                 "supabase_anon_key": supabase_anon_key,
+                "model_catalog": model_catalog,
+                "asset_version": "2026-04-12-1",
             },
         )
     except Exception:
