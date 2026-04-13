@@ -1,9 +1,13 @@
 # Virtual environment
 .venv/
+.venv1/
 
 # Python cache
 __pycache__/
 *.pyc
+.pytest_cache/
+.coverage
+htmlcov/
 
 # Environment variables (secrets)
 .env

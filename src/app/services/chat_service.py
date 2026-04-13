@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import UTC, datetime
 import uuid
 
 from app.config import APP_ENV
@@ -13,7 +13,7 @@ def handle_chat(request: ChatRequest) -> ChatResponse:
     conversation_id = getattr(request, "conversation_id", None) or create_conversation()
 
     request_id = str(uuid.uuid4())
-    timestamp = datetime.utcnow()
+    timestamp = datetime.now(UTC)
 
     add_message(
         conversation_id=conversation_id,

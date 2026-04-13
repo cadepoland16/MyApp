@@ -82,9 +82,10 @@ Notes:
 
 1. Create and activate a virtual environment
 2. Install dependencies from `requirements.txt`
-3. Copy `.env.example` to `.env` and fill in your values
-4. Make sure Ollama is running locally
-5. Start the FastAPI server
+3. Install test dependencies from `requirements-dev.txt` if you plan to run the test suite
+4. Copy `.env.example` to `.env` and fill in your values
+5. Make sure Ollama is running locally
+6. Start the FastAPI server
 
 ```bash
 uvicorn app.main:app --reload --port 8000 --app-dir src
@@ -95,6 +96,22 @@ Then open:
 ```text
 http://127.0.0.1:8000/chat
 ```
+
+## Testing
+
+Run the test suite with:
+
+```bash
+pytest
+```
+
+The current tests cover:
+
+- health endpoint behavior
+- model catalog behavior
+- invalid model validation
+- selected model propagation through the chat endpoint
+- server-rendered model picker output
 
 ## API Endpoints
 
@@ -164,5 +181,19 @@ The actual large model files live under:
 - User authentication
 - Conversation rename/delete support
 - Test coverage for routes and service logic
+
+## Project Standards
+
+This repository now includes:
+
+- an open-source license in `LICENSE`
+- a contribution guide in `CONTRIBUTING.md`
+- a security reporting guide in `SECURITY.md`
+- a development test dependency file in `requirements-dev.txt`
+- a baseline pytest suite under `tests/`
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE).
 
 Built by Cade Poland.

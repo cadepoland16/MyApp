@@ -3,15 +3,20 @@ from supabase import create_client, Client
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "").strip()
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY", "").strip()
+_sb: Client | None = None
 
-if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
-    raise RuntimeError("Missing SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY in .env")
 
-sb: Client = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+def _get_client() -> Client:
+    global _sb
+    if _sb is None:
+        if not SUPABASE_URL or not SUPABASE_SERVICE_ROLE_KEY:
+            raise RuntimeError("Missing SUPABASE_URL and/or SUPABASE_SERVICE_ROLE_KEY in .env")
+        _sb = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+    return _sb
 
 def list_conversations(limit: int = 50):
     resp = (
-        sb.table("conversations")
+        _get_client().table("conversations")
         .select("id,created_at")
         .order("created_at", desc=True)
         .limit(limit)
@@ -20,13 +25,13 @@ def list_conversations(limit: int = 50):
     return resp.data or []
 
 def create_conversation() -> str:
-    resp = sb.table("conversations").insert({}).execute()
+    resp = _get_client().table("conversations").insert({}).execute()
     data = resp.data or []
     return data[0]["id"]
 
 def get_messages(conversation_id: str, limit: int = 200):
     resp = (
-        sb.table("messages")
+        _get_client().table("messages")
         .select("id,conversation_id,role,content,created_at,model,env,request_id")
         .eq("conversation_id", conversation_id)
         .order("created_at", desc=False)
@@ -43,7 +48,7 @@ def add_message(
     env: str | None = None,
     request_id: str | None = None,
 ):
-    sb.table("messages").insert(
+    _get_client().table("messages").insert(
         {
             "conversation_id": conversation_id,
             "role": role,

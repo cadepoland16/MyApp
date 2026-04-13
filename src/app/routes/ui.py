@@ -23,13 +23,13 @@ async def chat_page(request: Request):
         model_catalog = get_model_catalog()
 
         return templates.TemplateResponse(
+            request,
             "chat.html",
             {
-                "request": request,
                 "supabase_url": supabase_url,
                 "supabase_anon_key": supabase_anon_key,
                 "model_catalog": model_catalog,
-                "asset_version": "2026-04-12-1",
+                "asset_version": "2026-04-12-2",
             },
         )
     except Exception:
