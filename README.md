@@ -105,6 +105,13 @@ Run the test suite with:
 pytest
 ```
 
+Run lint and formatting checks with:
+
+```bash
+ruff check src tests
+ruff format --check src tests
+```
+
 The current tests cover:
 
 - health endpoint behavior
@@ -169,8 +176,8 @@ The actual large model files live under:
 ## Known Limitations
 
 - The app currently uses synchronous database and HTTP calls inside FastAPI request handlers
-- There is no automated test suite yet
-- The current database service requires Supabase credentials at import time
+- The current test suite is a baseline smoke suite, not deep integration coverage
+- Supabase-backed routes still require valid Supabase credentials at runtime
 - The frontend is intentionally lightweight and does not yet support streaming responses
 
 ## Future Improvements
@@ -191,6 +198,8 @@ This repository now includes:
 - a security reporting guide in `SECURITY.md`
 - a development test dependency file in `requirements-dev.txt`
 - a baseline pytest suite under `tests/`
+- Ruff linting and formatting rules in `pyproject.toml`
+- GitHub Actions CI in `.github/workflows/ci.yml`
 
 ## License
 

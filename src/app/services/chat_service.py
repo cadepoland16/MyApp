@@ -1,10 +1,10 @@
-from datetime import UTC, datetime
 import uuid
+from datetime import UTC, datetime
 
 from app.config import APP_ENV
 from app.models.chat import ChatRequest, ChatResponse
+from app.services.db import add_message, create_conversation
 from app.services.llm import resolve_chat_model, simple_chat
-from app.services.db import create_conversation, add_message
 
 
 def handle_chat(request: ChatRequest) -> ChatResponse:

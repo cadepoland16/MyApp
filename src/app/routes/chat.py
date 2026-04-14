@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+
 from app.models.chat import ChatRequest, ChatResponse, ModelCatalogResponse
 from app.services.chat_service import handle_chat
 from app.services.llm import get_model_catalog

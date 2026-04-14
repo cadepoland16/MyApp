@@ -1,5 +1,6 @@
 from fastapi import APIRouter
-from app.services.db import list_conversations, get_messages, create_conversation
+
+from app.services.db import create_conversation, get_messages, list_conversations
 
 router = APIRouter(prefix="/api", tags=["conversations"])
 

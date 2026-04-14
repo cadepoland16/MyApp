@@ -1,10 +1,12 @@
-from fastapi import FastAPI
-from app.routes.health import router as health_router
-from app.routes.chat import router as chat_router
 from pathlib import Path
+
+from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
-from app.routes.ui import router as ui_router
+
+from app.routes.chat import router as chat_router
 from app.routes.conversations import router as conversations_router
+from app.routes.health import router as health_router
+from app.routes.ui import router as ui_router
 
 app = FastAPI(title="CadeGPT")
 

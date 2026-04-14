@@ -1,9 +1,10 @@
-from pathlib import Path
 import traceback
+from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+
 from app.services.llm import get_model_catalog
 
 router = APIRouter()

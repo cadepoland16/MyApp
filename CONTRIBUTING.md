@@ -24,12 +24,20 @@ uvicorn app.main:app --reload --port 8000 --app-dir src
 pytest
 ```
 
+## Linting And Formatting
+
+```bash
+ruff check src tests
+ruff format --check src tests
+```
+
 ## Contribution Guidelines
 
 - Keep changes scoped and focused
 - Prefer small, reviewable commits
 - Update documentation when behavior changes
 - Add or update tests for API and service behavior when practical
+- Keep `ruff check`, `ruff format --check`, and `pytest` passing before opening a PR
 - Avoid committing secrets, local credentials, or generated files
 
 ## Pull Request Expectations

@@ -15,7 +15,9 @@ def test_models_endpoint_returns_curated_catalog(monkeypatch):
     from app.main import app
     from app.services import llm
 
-    monkeypatch.setattr(llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"})
+    monkeypatch.setattr(
+        llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"}
+    )
 
     client = TestClient(app)
     response = client.get("/api/models")
@@ -48,9 +50,15 @@ def test_chat_endpoint_uses_selected_model(monkeypatch):
 
     writes = []
 
-    monkeypatch.setattr(llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"})
+    monkeypatch.setattr(
+        llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"}
+    )
     monkeypatch.setattr(chat_service, "create_conversation", lambda: "conversation-123")
-    monkeypatch.setattr(chat_service, "simple_chat", lambda message, model=None: (f"reply:{message}", model or "llama3.2:latest"))
+    monkeypatch.setattr(
+        chat_service,
+        "simple_chat",
+        lambda message, model=None: (f"reply:{message}", model or "llama3.2:latest"),
+    )
     monkeypatch.setattr(chat_service, "add_message", lambda **kwargs: writes.append(kwargs))
 
     client = TestClient(app)
@@ -69,12 +77,14 @@ def test_chat_page_renders_model_picker(monkeypatch):
     from app.main import app
     from app.services import llm
 
-    monkeypatch.setattr(llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"})
+    monkeypatch.setattr(
+        llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"}
+    )
 
     client = TestClient(app)
     response = client.get("/chat")
 
     assert response.status_code == 200
-    assert "id=\"modelSelect\"" in response.text
+    assert 'id="modelSelect"' in response.text
     assert "Phi-4 Mini" in response.text
     assert "/static/chat.js?v=2026-04-12-2" in response.text

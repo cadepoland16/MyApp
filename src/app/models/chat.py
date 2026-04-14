@@ -1,4 +1,5 @@
 from datetime import datetime
+
 from pydantic import BaseModel
 
 
@@ -15,6 +16,7 @@ class ChatResponse(BaseModel):
     timestamp: datetime
     request_id: str
     conversation_id: str
+
 
 class ConversationSummary(BaseModel):
     id: str

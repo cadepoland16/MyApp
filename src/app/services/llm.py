@@ -1,14 +1,15 @@
 from typing import Optional, Tuple
+
 import requests
 from openai import OpenAI
 
 from app.config import (
     APP_ENV,
-    OPENAI_API_KEY,
     LLM_PROVIDER,
-    OLLAMA_BASE_URL,
     OLLAMA_AVAILABLE_MODELS,
+    OLLAMA_BASE_URL,
     OLLAMA_MODEL,
+    OPENAI_API_KEY,
 )
 
 _openai_client: Optional[OpenAI] = None
@@ -144,9 +145,7 @@ def resolve_chat_model(requested_model: str | None) -> str:
         None,
     )
     if installed_entry and installed_entry.get("installed") is False:
-        raise ValueError(
-            f"Model '{chosen_model}' is allowed but not installed in Ollama."
-        )
+        raise ValueError(f"Model '{chosen_model}' is allowed but not installed in Ollama.")
 
     return chosen_model
 
