@@ -1,6 +1,11 @@
 from fastapi.testclient import TestClient
 
 
+def _force_ollama_mode(monkeypatch, llm_module):
+    monkeypatch.setattr(llm_module, "LLM_PROVIDER", "ollama")
+    monkeypatch.setattr(llm_module, "OLLAMA_MODEL", "llama3.2:latest")
+
+
 def test_health_endpoint():
     from app.main import app
 
@@ -15,6 +20,7 @@ def test_models_endpoint_returns_curated_catalog(monkeypatch):
     from app.main import app
     from app.services import llm
 
+    _force_ollama_mode(monkeypatch, llm)
     monkeypatch.setattr(
         llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"}
     )
@@ -34,8 +40,11 @@ def test_models_endpoint_returns_curated_catalog(monkeypatch):
     assert all(model["installed"] is True for model in data["models"])
 
 
-def test_chat_endpoint_rejects_disabled_model():
+def test_chat_endpoint_rejects_disabled_model(monkeypatch):
     from app.main import app
+    from app.services import llm
+
+    _force_ollama_mode(monkeypatch, llm)
 
     client = TestClient(app)
     response = client.post("/api/chat", json={"message": "hello", "model": "gemma3:4b"})
@@ -50,6 +59,7 @@ def test_chat_endpoint_uses_selected_model(monkeypatch):
 
     writes = []
 
+    _force_ollama_mode(monkeypatch, llm)
     monkeypatch.setattr(
         llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"}
     )
@@ -77,6 +87,7 @@ def test_chat_page_renders_model_picker(monkeypatch):
     from app.main import app
     from app.services import llm
 
+    _force_ollama_mode(monkeypatch, llm)
     monkeypatch.setattr(
         llm, "_get_installed_ollama_models", lambda: {"llama3.2:latest", "phi4-mini", "qwen2.5:7b"}
     )
